@@ -6,13 +6,28 @@
 
 m_dots = include 'lib/m_dots'
 
+REDRAW_FRAMERATE = 30
+
+
+-----------------------------------------------------------------
+-- INIT
+-----------------------------------------------------------------
 
 function init()
   m_dots.build_params()
   m_dots.init()
+
+  -- redraw clock
+  screen_dirty = true
+  clock.run(redraw_clock)
 end
 
+-----------------------------------------------------------------
+-- UI
+-----------------------------------------------------------------
+
 function redraw()
+  screen.clear()
   screen.aa(0)
 
   local p = nil
@@ -39,6 +54,7 @@ function redraw()
   end
 
   screen.stroke()
+  screen.update()
 end
 
 function key(n,z)
@@ -48,9 +64,22 @@ function key(n,z)
     else
       m_dots:start()
     end
+    screen_dirty = true
   end
 end
 
 function enc(n,d)
   print('dots encoder')
+end
+
+function redraw_clock()
+  while true do
+    clock.sleep(1/REDRAW_FRAMERATE)
+    
+    if screen_dirty then
+      redraw()
+      screen_dirty = false
+    end
+
+  end
 end
