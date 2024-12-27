@@ -1,14 +1,14 @@
 -- dots effect
 
--- TODO: add reverse functionality (later)
 
 local m_dots = {}
 
-m_dots.positions = {0, 0, 10, 10}
-m_dots.moving = false
-
 -- max loop length for dots
 local MAX_LENGTH = 10
+
+-- [1-2] == rec, [3-4] == dots
+m_dots.positions = {0, 0, MAX_LENGTH, MAX_LENGTH}
+m_dots.moving = false
 
 -----------------------------------------------------------------
 -- PARAMETERS
@@ -17,22 +17,20 @@ local MAX_LENGTH = 10
 amp_l = 0
 amp_r = 0
 
+
 function m_dots.build_params()
 
   params:add_separator('dots', 'dots')
-  params:add_number('dots_loop_length', 'loop length', 0, MAX_LENGTH, 5,
+  params:add_number('loop_length', 'loop length', 0, MAX_LENGTH, 5,
     function(p) return p:get() .. ' s' end)
   params:add_control('dots_move_time', 'dots move time', 
     controlspec.new(0.1, 1, 'lin', 0.1, 0.2, 's', 0.1))
   params:add_control('dots_check_time', 'dots check time', 
     controlspec.new(0.1, 2, 'lin', 0.1, 1, 's', 0.1))
   params:set_action('dots_check_time', update_amp_poll_times)
-  -- TODO: make the threshold a decibel controlspec
   params:add_control('dots_amp_threshold', 'amp threshold',
-    controlspec.new(0.001, 0.2, 'lin', 0, 0.05, '', 0.05, false))
-  params:add_option('dots_input_on', 'send input to dots', {'off', 'on'}, 1)
-
-  -- TODO: see norns docs for .action_write/_read to save tables
+        controlspec.new(0.001, 0.5, 'lin', 0, 0.05, '', 0.02, false),
+        function(p) return util.round(ampdb(p:get()), 1) .. ' db' end)
 
 end
 
@@ -44,14 +42,12 @@ function m_dots.init()
   -- input level
   audio.level_adc_cut(1)
 
-  -- track amplitude for dots page
+  -- track amplitude
   poll_amp_l = poll.set("amp_in_l", update_amp_l)
   poll_amp_l.time = params:get('dots_check_time')
 
   poll_amp_r = poll.set("amp_in_r", update_amp_r)
   poll_amp_r.time = params:get('dots_check_time')
-
-  -- TODO: use `amp_out_l/r` poll for tracking engine input
 
 end
 
@@ -97,8 +93,8 @@ function m_dots.sc_stop()
 
     -- dots
     else
-      softcut.position(i, params:get('dots_loop_length'))
-      m_dots.positions[i] = params:get('dots_loop_length')
+      softcut.position(i, params:get('loop_length'))
+      m_dots.positions[i] = params:get('loop_length')
     end
   end
 
@@ -116,7 +112,7 @@ function m_dots.sc_start()
     softcut.rate(i, 1)
     softcut.loop(i, 1)
     softcut.loop_start(i, 0)
-    softcut.loop_end(i, params:get('dots_loop_length'))
+    softcut.loop_end(i, params:get('loop_length'))
     softcut.fade_time(i, 0.1)
     softcut.pan(i, i % 2 == 0 and 1 or -1)
 
@@ -137,8 +133,8 @@ function m_dots.sc_start()
     else
       softcut.play(i, 0)
       softcut.level(i, 1)
-      softcut.position(i, params:get('dots_loop_length'))
-      m_dots.positions[i] = params:get('dots_loop_length')
+      softcut.position(i, params:get('loop_length'))
+      m_dots.positions[i] = params:get('loop_length')
     end
   end
 
@@ -150,9 +146,11 @@ function m_dots.move_dots()
   while true do
     clock.sleep(params:get('dots_move_time'))
     local p = nil
+    local buffer = nil
     for i = 3,4 do
-      -- choose a dot start location somewhere in the loop (not the end)
-      p = math.random() * (params:get('dots_loop_length') - 0.1)
+      -- choose a dot start location somewhere in the loop (with buffer)
+      buffer = params:get('dots_move_time')
+      p = math.random() * (params:get('loop_length') - buffer)
 
       if sound then
         softcut.position(i, p)
@@ -167,7 +165,7 @@ function m_dots.move_dots()
 end
 
 function m_dots.update_position(i,pos)
-  softcut.loop_end(i, params:get('dots_loop_length'))
+  softcut.loop_end(i, params:get('loop_length'))
   m_dots.positions[i] = pos
   screen_dirty = true
 end
@@ -185,6 +183,11 @@ end
 function update_amp_poll_times(t)
   poll_amp_l.time = t
   poll_amp_r.time = t
+end
+
+-- convert amp [0, 1] to decibels [-inf, 0]
+function ampdb(amp)
+  return math.log(amp, 10) * 20.0
 end
 
 return m_dots

@@ -40,7 +40,7 @@ function redraw()
   -- voice position (above or below line)
   for i=1,4 do
     p = m_dots.positions[i]
-    p = util.linlin(0, params:get('dots_loop_length'), 14, 114, p)
+    p = util.linlin(0, params:get('loop_length'), 14, 114, p)
 
     screen.move(p, baseline_y)
     lr = i % 2 == 0 and 1 or -1
@@ -82,4 +82,38 @@ function redraw_clock()
     end
 
   end
+end
+
+
+
+
+-----------------------------------------------------------------
+-- DATA
+-----------------------------------------------------------------
+
+function manage_data()
+
+  -- save
+  params.action_write = function(filename,name,number)
+    print("finished writing '"..filename.."' as '"..name.."'", number)
+    os.execute("mkdir -p "..norns.state.data.."/"..number.."/")
+
+    tab.save(m_dots, norns.state.data.."/"..number.."/dots.data")
+
+  end
+
+  -- load
+  params.action_read = function(filename,silent,number)
+    print("finished reading '"..filename.."'", number)
+
+    m_dots = tab.load(norns.state.data.."/"..number.."/dots.data")
+    
+  end
+
+  -- delete
+  params.action_delete = function(filename,name,number)
+    print("finished deleting '"..filename, number)
+    norns.system_cmd("rm -r "..norns.state.data.."/"..number.."/")
+  end
+
 end
