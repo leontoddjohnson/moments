@@ -5,9 +5,9 @@
 
 
 m_dots = include 'lib/m_dots'
+m_grid = include 'lib/m_grid'
 
 REDRAW_FRAMERATE = 30
-
 
 -----------------------------------------------------------------
 -- INIT
@@ -32,13 +32,21 @@ function redraw()
 
   local p = nil
   local baseline_y = 30
+  local dot_buffer = 6
+
+  screen.move(64, 10)
+  if m_dots.moving then
+    screen.text_center('•')
+  else
+    screen.text_center('----')
+  end
 
   -- baseline
   screen.move(14, baseline_y)
   screen.line(114, baseline_y)
 
   -- voice position (above or below line)
-  for i=1,4 do
+  for i=1,6 do
     p = m_dots.positions[i]
     p = util.linlin(0, params:get('loop_length'), 14, 114, p)
 
@@ -47,18 +55,28 @@ function redraw()
 
     if i < 3 then
       screen.line_rel(0, 12 * lr)
+    elseif i == 3 or i == 6 then
+      screen.move_rel(0, lr * 2 * dot_buffer)
+      screen.text('.')
     else
-      screen.move_rel(0, 6 * lr)
+      screen.move_rel(0, lr * dot_buffer)
       screen.text('.')
     end
   end
 
   screen.stroke()
+
+  screen.move(14, 60)
+  screen.text("loop length:")
+
+  screen.move(114, 60)
+  screen.text_right(params:string('loop_length'))
+
   screen.update()
 end
 
 function key(n,z)
-  if n == 3 and z == 1 then
+  if (n == 3 or n == 2) and z == 1 then
     if m_dots.moving then
       m_dots:stop()
     else
@@ -69,7 +87,9 @@ function key(n,z)
 end
 
 function enc(n,d)
-  print('dots encoder')
+  if n > 1 then
+    params:delta('loop_length', d)
+  end
 end
 
 function redraw_clock()
@@ -83,9 +103,6 @@ function redraw_clock()
 
   end
 end
-
-
-
 
 -----------------------------------------------------------------
 -- DATA
