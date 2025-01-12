@@ -29,9 +29,10 @@ amp_r = 0
 function m_dots.build_params()
 
   spec_amp_thresh = controlspec.new(0.001, 0.5, 'lin', 0, 0.1, '', 0.01, false)
-  spec_check_time = controlspec.new(0.1, 2, 'lin', 0.1, 1, 's', 0.1)
+  spec_check_time = controlspec.new(0.1, 2, 'lin', 0.1, 0.5, 's', 0.1)
   spec_slew_time = controlspec.new(0, 1, 'lin', 0.01, 0, 's', 0.1)
   spec_amp_1 = controlspec.new(0, 1, 'lin', 0, 1, '', 0.01)
+  spec_rate = controlspec.new(-2, 1, 'lin', 0, 1, '', 0.5)
 
   -- total buffer loop length
   params:add_number('loop_length', 'loop length', 1, MAX_LENGTH, 5,
@@ -94,15 +95,14 @@ function m_dots.build_params()
     end)
 
     -- dot rate
-    params:add_option('dot_'.. i .. '_rate', 'dot ' .. i .. ' rate',
-      options.RATE, -2)
+    params:add_control('dot_'.. i .. '_rate', 'dot ' .. i .. ' rate',
+      spec_rate)
     params:set_action('dot_'.. i .. '_rate', 
       function(x)
         softcut.rate(i + 2, x)  -- dots start at voice 3
     end)
 
     -- dot pan
-    controlspec.PAN.default = 0
     params:add_control('dot_'.. i .. '_pan', 'dot ' .. i .. ' pan', 
       controlspec.PAN)
     params:set_action('dot_'.. i .. '_pan', 
@@ -114,6 +114,31 @@ function m_dots.build_params()
 
   -- input type
   params:add_option('input_type', 'input type', {'mono', 'stereo'}, 2)
+  params:set_action('input_type',
+    function(x)
+      for i = 1,6 do
+        if i < 3 then
+          if x == 1 then
+            -- when mono, only record to left buffer
+            softcut.buffer(i, 1)
+          else
+            -- otherwise, use both
+            softcut.buffer(i, i)
+          end
+        else
+          if x == 1 then
+            -- when mono, only read from left buffer
+            softcut.buffer(i, 1)
+            softcut.pan(i, 0)
+          else
+            -- otherwise, send dots 1 and 2 to left, and 3 and 4 to right
+            softcut.buffer(i, i < 5 and 1 or 2)
+            softcut.pan(i, i < 5 and -1 or 1)
+          end
+        end
+      end
+    end
+)
 
 end
 
@@ -233,13 +258,14 @@ function m_dots.sc_start()
       if params:get('input_type') == 1 then
         -- when mono, only read from left buffer
         softcut.buffer(i, 1)
+        softcut.pan(i, 0)
       else
         -- otherwise, send dots 1 and 2 to left, and 3 and 4 to right
         softcut.buffer(i, i < 5 and 1 or 2)
+        softcut.pan(i, i < 5 and -1 or 1)
       end
 
       softcut.rate(i, params:get('dot_' .. i - 2 .. '_rate'))
-      softcut.pan(i, params:get('dot_' .. i - 2 .. '_pan'))
       softcut.play(i, 0)
       softcut.level(i, params:get('dot_' .. i - 2 .. '_level'))
       softcut.position(i, params:get('loop_length'))
