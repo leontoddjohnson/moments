@@ -9,10 +9,6 @@ local MAX_LENGTH = 15
 m_dots.positions = {0, 0, MAX_LENGTH, MAX_LENGTH, MAX_LENGTH, MAX_LENGTH}
 m_dots.moving = false
 
-options = {}
-options.RATE = {-2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2}
-options.PAN = {-1, -0.5, 0.5, 1, 0}
-
 -- clocks set for each dot, [1] - [4]
 m_dots.clocks = {}
 

@@ -11,27 +11,154 @@ local m_grid = {}
 g = grid.connect()  -- requires 8x16 grid
 
 g_brightness = {
-  situation = 0
+  level_met = 8,
+  level_not_met = 3
 }
 
--- keys held [y][x] or [row][col]
--- 1 == held and 0 == not held
-KEY_HOLD = {}
+options = {}
+options.LEVEL = {1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 1}
+options.PAN = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
+options.RATE = {0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}
+options.TIME = {8, 7, 6, 5, 4, 3, 2, 1}
 
------------------------------------------------------------------
--- INIT
------------------------------------------------------------------
+REVERSE = false
 
-function m_grid.init()
 
-  -- key_hold map
-  for r = 1,8 do
-    KEY_HOLD[r] = {}
-    for c = 1,16 do
-      KEY_HOLD[r][c] = 0
+-- ========================================================================== --
+-- LEVELS
+-- ========================================================================== --
+
+function m_grid.draw_levels()
+  for y = 1,4 do
+    for i = 1,8 do
+      p = 'dot_' .. y .. '_level'
+
+      if params:get(p) >= options.LEVEL[i] then
+        g:led(i, y, g_brightness.level_met)
+      else
+        g:led(i, y, g_brightness.level_not_met)
+      end
+
     end
   end
 
+end
+
+
+function m_grid.key_levels(x, y, z)
+
+  local dot = y
+  local v = options.LEVEL[x]
+
+  -- when selecting current value, set to 0
+  if params:get('dot_' .. dot .. '_level') == v then
+    params:set('dot_' .. dot .. '_level', 0)
+  else
+    params:set('dot_' .. dot .. '_level', v)
+  end
+
+end
+
+
+-- ========================================================================== --
+-- PAN
+-- ========================================================================== --
+
+function m_grid.draw_pan()
+
+  -- -- 0-centered value
+  -- if tab.contains({'pan'}, PARAM) then
+  --   p = 'track_' .. track .. '_' .. PARAM
+  --   if params:get(p) > 0 and i >= 4 then
+  --     if params:get(p) >= param_levels[PARAM][i] - 0.001 then
+  --       g:led(i, y, g_brightness.level_met)
+  --     end
+  --   elseif params:get(p) < 0 and i <= 3 then
+  --     if params:get(p) <= param_levels[PARAM][i] + 0.001 then
+  --       g:led(i, y, g_brightness.level_met)
+  --     end
+  --   end
+  -- end
+
+end
+
+
+function m_grid.key_pan(x, y, z)
+end
+
+
+-- ========================================================================== --
+-- TIME
+-- ========================================================================== --
+
+function m_grid.draw_time()
+end
+
+
+function m_grid.key_time(x, y, z)
+end
+
+
+-- ========================================================================== --
+-- RATE
+-- ========================================================================== --
+
+function m_grid.draw_rate()
+end
+
+
+function m_grid.key_rate(x, y, z)
+end
+
+
+-- ========================================================================== --
+-- GRID FUNCTIONS
+-- ========================================================================== --
+
+function m_grid:grid_redraw()
+  g:all(0)
+
+  m_grid.draw_levels()  -- upper left
+  m_grid.draw_pan()     -- lower left
+  m_grid.draw_time()    -- upper right
+  m_grid.draw_rate()    -- lower right
+
+  g:refresh()
+end
+
+
+function g.key(x, y, z)
+
+  -- simple, only down encoding
+  if z == 1 then
+    if x < 9 and y < 5 then
+      m_grid.key_levels(x, y, z)
+    elseif x < 9 and y >= 5 then
+      m_grid.key_pan(x, y, z)
+    elseif x >= 9 and y < 5 then
+      m_grid.key_time(x, y, z)
+    else
+      m_grid.key_rate(x, y, z)
+    end
+  end
+
+  grid_dirty = true
+
+end
+
+
+-- ========================================================================== --
+-- UTILITY
+-- ========================================================================== --
+
+-- return index of value in table
+function index_of(array, value)
+  for i, v in ipairs(array) do
+      if v == value then
+          return i
+      end
+  end
+  return nil
 end
 
 return m_grid

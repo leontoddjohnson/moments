@@ -19,6 +19,7 @@ function init()
 
   -- redraw clock
   screen_dirty = true
+  grid_dirty = true
   clock.run(redraw_clock)
 end
 
@@ -99,6 +100,11 @@ function redraw_clock()
     if screen_dirty then
       redraw()
       screen_dirty = false
+    end
+
+    if grid_dirty then
+      m_grid:grid_redraw()
+      grid_dirty = false
     end
 
   end
