@@ -16,10 +16,10 @@ g_brightness = {
 }
 
 options = {}
-options.LEVEL = {1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 1}
-options.PAN = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
-options.RATE = {0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}
-options.TIME = {8, 7, 6, 5, 4, 3, 2, 1}
+options.level = {1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 1}
+options.pan = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
+options.rate = {0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}
+options.time = {8, 7, 6, 5, 4, 3, 2, 1}
 
 REVERSE = false
 
@@ -33,7 +33,7 @@ function m_grid.draw_levels()
     for i = 1,8 do
       p = 'dot_' .. y .. '_level'
 
-      if params:get(p) >= options.LEVEL[i] then
+      if params:get(p) >= options.level[i] - 0.0001 then
         g:led(i, y, g_brightness.level_met)
       else
         g:led(i, y, g_brightness.level_not_met)
@@ -47,15 +47,7 @@ end
 
 function m_grid.key_levels(x, y, z)
 
-  local dot = y
-  local v = options.LEVEL[x]
-
-  -- when selecting current value, set to 0
-  if params:get('dot_' .. dot .. '_level') == v then
-    params:set('dot_' .. dot .. '_level', 0)
-  else
-    params:set('dot_' .. dot .. '_level', v)
-  end
+  set_param(x, y, 'level')
 
 end
 
@@ -65,25 +57,33 @@ end
 -- ========================================================================== --
 
 function m_grid.draw_pan()
+  local dot
 
-  -- -- 0-centered value
-  -- if tab.contains({'pan'}, PARAM) then
-  --   p = 'track_' .. track .. '_' .. PARAM
-  --   if params:get(p) > 0 and i >= 4 then
-  --     if params:get(p) >= param_levels[PARAM][i] - 0.001 then
-  --       g:led(i, y, g_brightness.level_met)
-  --     end
-  --   elseif params:get(p) < 0 and i <= 3 then
-  --     if params:get(p) <= param_levels[PARAM][i] + 0.001 then
-  --       g:led(i, y, g_brightness.level_met)
-  --     end
-  --   end
-  -- end
+  for y=5,8 do
+    dot = y - 4
+    for i=1,8 do
+      p = 'dot_' .. dot .. '_pan'
+
+      if params:get(p) > 0 and i >= 5 then
+        if params:get(p) >= options.pan[i] then
+          g:led(i, y, g_brightness.level_met)
+        end
+      elseif params:get(p) < 0 and i <= 4 then
+        if params:get(p) <= options.pan[i] then
+          g:led(i, y, g_brightness.level_met)
+        end
+      end
+
+    end
+  end
 
 end
 
 
 function m_grid.key_pan(x, y, z)
+
+  set_param(x, y - 4, 'pan')
+
 end
 
 
@@ -150,6 +150,24 @@ end
 -- ========================================================================== --
 -- UTILITY
 -- ========================================================================== --
+
+-- **horizontal selector**
+-- set `dot` param value to the `x`th of `options`, where `x` == 1 indicates the
+-- first option. If selecting an already set value, set parameter to `zero`.
+-- `param` is the string to go after "dot_*_". E.g., `param` = "level" is valid
+-- Default for `zero` is 0.
+function set_param(x, dot, param, zero)
+  zero = zero or 0
+  local v = options[param][x]
+
+  -- when selecting current value, set to 0
+  if params:get('dot_' .. dot .. '_' .. param) == v then
+    params:set('dot_' .. dot .. '_' .. param, zero)
+  else
+    params:set('dot_' .. dot .. '_' .. param, v)
+  end
+
+end
 
 -- return index of value in table
 function index_of(array, value)

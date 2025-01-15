@@ -79,7 +79,9 @@ function m_dots.build_params()
     params:add_number('dot_'.. i .. '_move_frac',
       'dot '.. i .. ' move fraction', 1, 8, 1, 
       function(p) 
-        if p:get() == 1 then return "1" else return "1/"..p:get() end
+        if p:get() == 1 then s = "1" else s = "1/"..p:get() end
+        grid_dirty = true
+        return s
       end)
 
     -- dot level
@@ -88,6 +90,7 @@ function m_dots.build_params()
     params:set_action('dot_'.. i .. '_level', 
       function(x)
         softcut.level(i + 2, x)  -- dots start at voice 3
+        grid_dirty = true
     end)
 
     -- dot rate
@@ -96,6 +99,7 @@ function m_dots.build_params()
     params:set_action('dot_'.. i .. '_rate', 
       function(x)
         softcut.rate(i + 2, x)  -- dots start at voice 3
+        grid_dirty = true
     end)
 
     -- dot pan
@@ -104,6 +108,7 @@ function m_dots.build_params()
     params:set_action('dot_'.. i .. '_pan', 
       function(x)
         softcut.pan(i + 2, x)  -- dots start at voice 3
+        grid_dirty = true
     end)
     
   end
