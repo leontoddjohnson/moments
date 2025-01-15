@@ -19,7 +19,7 @@ options = {}
 options.level = {1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 1}
 options.pan = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
 options.rate = {0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}
-options.time = {8, 7, 6, 5, 4, 3, 2, 1}
+options.move_frac = {8, 7, 6, 5, 4, 3, 2, 1}
 
 REVERSE = false
 
@@ -41,7 +41,6 @@ function m_grid.draw_levels()
 
     end
   end
-
 end
 
 
@@ -92,10 +91,24 @@ end
 -- ========================================================================== --
 
 function m_grid.draw_time()
+  for y = 1,4 do
+    for i = 1,8 do
+      local x = i + 8
+      local p = 'dot_' .. y .. '_move_frac'
+
+      if params:get(p) == options.move_frac[i] then
+        g:led(x, y, g_brightness.level_met)
+      end
+
+    end
+  end
 end
 
 
 function m_grid.key_time(x, y, z)
+
+  params:set('dot_' .. y .. '_move_frac', options.move_frac[x - 8])
+
 end
 
 
