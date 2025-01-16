@@ -28,7 +28,7 @@ function m_dots.build_params()
   spec_check_time = controlspec.new(0.1, 2, 'lin', 0.1, 0.5, 's', 0.1)
   spec_slew_time = controlspec.new(0, 1, 'lin', 0.01, 0, 's', 0.1)
   spec_amp_1 = controlspec.new(0, 1, 'lin', 0, 1, '', 0.01)
-  spec_rate = controlspec.new(-2, 1, 'lin', 0, 1, '', 0.5)
+  spec_rate = controlspec.new(-4, 4, 'lin', 0.5, 1, '')
 
   -- total buffer loop length
   params:add_number('loop_length', 'loop length', 1, MAX_LENGTH, 5,

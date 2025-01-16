@@ -56,11 +56,13 @@ function redraw()
 
     if i < 3 then
       screen.line_rel(0, 12 * lr)
+    -- dots 1 and 4
     elseif i == 3 or i == 6 then
-      screen.move_rel(0, lr * 2 * dot_buffer)
+      screen.move_rel(0, lr * 2 * dot_buffer)  -- 1 is l (top), 4 is r (btm)
       screen.text('.')
+    -- dots 2 and 3
     else
-      screen.move_rel(0, lr * dot_buffer)
+      screen.move_rel(0, -lr * dot_buffer)  -- 2 is l (top), 3 is r (btm)
       screen.text('.')
     end
   end

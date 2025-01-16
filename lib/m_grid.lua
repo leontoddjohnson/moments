@@ -12,7 +12,8 @@ g = grid.connect()  -- requires 8x16 grid
 
 g_brightness = {
   level_met = 8,
-  level_not_met = 3
+  level_not_met = 3,
+  dim_indicator = 3
 }
 
 options = {}
@@ -21,7 +22,8 @@ options.pan = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
 options.rate = {0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}
 options.move_frac = {8, 7, 6, 5, 4, 3, 2, 1}
 
-REVERSE = false
+-- rate sign for each dot
+reverse = {false, false, false, false}
 
 
 -- ========================================================================== --
@@ -58,7 +60,7 @@ end
 function m_grid.draw_pan()
   local dot
 
-  for y=5,8 do
+  for y = 5,8 do
     dot = y - 4
     for i=1,8 do
       p = 'dot_' .. dot .. '_pan'
@@ -117,10 +119,54 @@ end
 -- ========================================================================== --
 
 function m_grid.draw_rate()
+  local v, i, p
+
+  for y = 5,8 do
+    p = 'dot_' .. y - 4 .. '_rate'
+
+    for x = 9,16 do
+      i = x - 8
+
+      -- select values in sequential order based on whether rate is negative
+      i = reverse[y-4] and 9 - i or i
+      sign = reverse[y-4] and -1 or 1
+      v = sign * options.rate[i]
+
+      -- mark rate of 1
+      if i == index_of(options.rate, 1) then
+        g:led(x, y, g_brightness.dim_indicator)
+      end
+
+      -- mark value
+      if params:get(p) == v then
+        g:led(x, y, g_brightness.level_met)
+      end
+
+    end
+  end
+
 end
 
 
 function m_grid.key_rate(x, y, z)
+
+  local i = x - 8
+  local dot = y - 4
+
+  i = reverse[y-4] and 9 - i or i
+
+  local sign = reverse[dot] and -1 or 1
+  local v = sign * options.rate[i]
+
+  p = 'dot_' .. dot .. '_rate'
+
+  if params:get(p) == v then
+    reverse[dot] = not reverse[dot]
+    params:set(p, -v)
+  else
+    params:set(p, v)
+  end
+
 end
 
 
