@@ -229,6 +229,8 @@ function m_dots.sc_start()
     softcut.enable(i, 1)
     softcut.loop(i, 1)
     softcut.fade_time(i, 0.1)
+    softcut.loop_start(i, 0)
+    softcut.loop_end(i, params:get('loop_length'))
 
     -- watch position
     softcut.phase_quant(i, 1 / REDRAW_FRAMERATE)
@@ -243,8 +245,6 @@ function m_dots.sc_start()
         softcut.buffer(i, i)
       end
 
-      softcut.loop_start(i, 0)
-      softcut.loop_end(i, params:get('loop_length'))
       softcut.position(i, 0)
       softcut.rec_level(i, 1)
       softcut.pre_level(i, 0)
