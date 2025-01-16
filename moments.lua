@@ -2,7 +2,9 @@
 -- 
 -- moments that once were
 -- 
-
+-- K2/K3: toggle dots
+-- E2/E3: adjust loop length
+--
 
 m_dots = include 'lib/m_dots'
 m_grid = include 'lib/m_grid'
