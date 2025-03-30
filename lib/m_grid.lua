@@ -7,6 +7,7 @@
 -- add dots to the end, maybe with a | separator from the rest
 
 local m_grid = {}
+local music = require "musicutil"
 
 g = grid.connect()  -- requires 8x16 grid
 
@@ -19,7 +20,12 @@ g_brightness = {
 options = {}
 options.level = {1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 1}
 options.pan = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
-options.rate = {0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}
+
+-- {-2ova + 5th, -ova, -ova + 5th, root, 5th, +ova, +ova + 5th, +2ova}
+intervals = {-24 + 7, -12, -12 + 7, 0, 7, 12, 12 + 7, 24}
+options.rate = {}
+for i,r in ipairs(intervals) do options.rate[i] = music.interval_to_ratio(r) end
+
 options.move_frac = {8, 7, 6, 5, 4, 3, 2, 1}
 
 -- rate sign for each dot
@@ -132,8 +138,8 @@ function m_grid.draw_rate()
       sign = reverse[y-4] and -1 or 1
       v = sign * options.rate[i]
 
-      -- mark rate of 1
-      if i == index_of(options.rate, 1) then
+      -- mark root/octave rates
+      if intervals[i] % 12 == 0 then
         g:led(x, y, g_brightness.dim_indicator)
       end
 
