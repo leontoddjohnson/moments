@@ -28,7 +28,6 @@ function m_dots.build_params()
   spec_check_time = controlspec.new(0.1, 2, 'lin', 0.1, 0.5, 's', 0.1)
   spec_slew_time = controlspec.new(0, 1, 'lin', 0.01, 0, 's', 0.1)
   spec_amp_1 = controlspec.new(0, 1, 'lin', 0, 1, '', 0.01)
-  spec_rate = controlspec.new(-4, 4, 'lin', 0.5, 1, '')
 
   -- total buffer loop length
   params:add_number('loop_length', 'loop length', 1, MAX_LENGTH, 5,
@@ -74,7 +73,7 @@ function m_dots.build_params()
 
   -- dot parameters --------------------------------------------------------- --
   params:add_group('dots', 'dots', 16)
-  for i = 1,4 do 
+  for i = 1,5 do 
     -- synchronized time between dot jumps
     params:add_number('dot_'.. i .. '_move_frac',
       'dot '.. i .. ' move fraction', 1, 8, 1, 
@@ -94,13 +93,35 @@ function m_dots.build_params()
     end)
 
     -- dot rate
-    params:add_control('dot_'.. i .. '_rate', 'dot ' .. i .. ' rate',
-      spec_rate)
+    params:add_number('dot_'.. i .. '_rate', 'dot ' .. i .. ' rate',
+      -24, 24, 0, function(p) return p:get() .. ' st' end)
     params:set_action('dot_'.. i .. '_rate', 
       function(x)
-        softcut.rate(i + 2, x)  -- dots start at voice 3
+        local r = music.interval_to_ratio(x)
+        local d = params:get('dot_' .. i .. '_direction')
+
+        -- forward or reverse
+        r = d == 1 and r or -r
+        softcut.rate(i + 2, r)
         grid_dirty = true
     end)
+
+    -- dot direction
+    params:add_option('dot_'.. i .. '_direction', 'dot '.. i .. ' direction', 
+      {'forward', 'reverse'}, 1)
+    params:set_action('dot_'.. i .. '_direction',
+      function(x)
+        local transpose = params:get('dot_' .. i .. '_rate')
+        local r = music.interval_to_ratio(transpose)
+
+        if x == 1 then
+          softcut.rate(i + 2, r)
+        else
+          softcut.rate(i + 2, -r)
+        end
+
+        grid_dirty = true
+      end
 
     -- dot pan
     params:add_control('dot_'.. i .. '_pan', 'dot ' .. i .. ' pan', 
@@ -228,6 +249,7 @@ function m_dots.sc_start()
     -- init for all
     softcut.enable(i, 1)
     softcut.loop(i, 1)
+    softcut.rate(i, 1)
     softcut.fade_time(i, 0.1)
     softcut.loop_start(i, 0)
     softcut.loop_end(i, params:get('loop_length'))
@@ -250,7 +272,6 @@ function m_dots.sc_start()
       softcut.pre_level(i, 0)
       softcut.level_input_cut(i, i, 1)
       softcut.level(i, 0)
-      softcut.rate(i, 1)
       softcut.play(i, 1)
       softcut.rec(i, 1)
 
@@ -266,7 +287,6 @@ function m_dots.sc_start()
         softcut.pan(i, i < 5 and -1 or 1)
       end
 
-      softcut.rate(i, params:get('dot_' .. i - 2 .. '_rate'))
       softcut.play(i, 0)
       softcut.level(i, params:get('dot_' .. i - 2 .. '_level'))
       softcut.position(i, params:get('loop_length'))

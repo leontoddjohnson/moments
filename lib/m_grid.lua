@@ -7,7 +7,6 @@
 -- add dots to the end, maybe with a | separator from the rest
 
 local m_grid = {}
-local music = require "musicutil"
 
 g = grid.connect()  -- requires 8x16 grid
 
@@ -22,14 +21,9 @@ options.level = {1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 1}
 options.pan = {-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1}
 
 -- {-2ova + 5th, -ova, -ova + 5th, root, 5th, +ova, +ova + 5th, +2ova}
-intervals = {-24 + 7, -12, -12 + 7, 0, 7, 12, 12 + 7, 24}
-options.rate = {}
-for i,r in ipairs(intervals) do options.rate[i] = music.interval_to_ratio(r) end
+options.interval = {-24 + 7, -12, -12 + 7, 0, 7, 12, 12 + 7, 24}
 
 options.move_frac = {8, 7, 6, 5, 4, 3, 2, 1}
-
--- rate sign for each dot
-reverse = {false, false, false, false}
 
 
 -- ========================================================================== --
@@ -125,26 +119,25 @@ end
 -- ========================================================================== --
 
 function m_grid.draw_rate()
-  local v, i, p
+  local i, p
 
   for y = 5,8 do
-    p = 'dot_' .. y - 4 .. '_rate'
+    local dot = y - 4
+    local reverse = params:get('dot_' .. dot .. '_direction') == 2
 
     for x = 9,16 do
       i = x - 8
 
       -- select values in sequential order based on whether rate is negative
-      i = reverse[y-4] and 9 - i or i
-      sign = reverse[y-4] and -1 or 1
-      v = sign * options.rate[i]
+      i = reverse and 9 - i or i
 
       -- mark root/octave rates
-      if intervals[i] % 12 == 0 then
+      if options.interval[i] % 12 == 0 then
         g:led(x, y, g_brightness.dim_indicator)
       end
 
       -- mark value
-      if params:get(p) == v then
+      if params:get('dot_' .. dot .. '_rate') == options.interval[i] then
         g:led(x, y, g_brightness.level_met)
       end
 
@@ -155,22 +148,18 @@ end
 
 
 function m_grid.key_rate(x, y, z)
-
   local i = x - 8
   local dot = y - 4
+  local reverse = params:get('dot_' .. dot .. '_direction') == 2
 
-  i = reverse[y-4] and 9 - i or i
-
-  local sign = reverse[dot] and -1 or 1
-  local v = sign * options.rate[i]
-
-  p = 'dot_' .. dot .. '_rate'
-
-  if params:get(p) == v then
-    reverse[dot] = not reverse[dot]
-    params:set(p, -v)
+  i = reverse and 9 - i or i
+  
+  if params:get('dot_' .. dot .. '_rate') == options.interval[i] then
+    -- if selecting same value, set to reverse
+    params:set('dot_' .. dot .. '_direction', reverse and 1 or 2)
   else
-    params:set(p, v)
+    -- otherwise, set new value
+    params:set('dot_' .. dot .. '_rate', options.interval[i])
   end
 
 end

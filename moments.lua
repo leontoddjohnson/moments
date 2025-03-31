@@ -6,6 +6,8 @@
 -- E2/E3: adjust loop length
 --
 
+music = require "musicutil"
+
 m_dots = include 'lib/m_dots'
 m_grid = include 'lib/m_grid'
 
