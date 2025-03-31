@@ -113,7 +113,7 @@ function m_dots.build_params()
       function(x)
         local transpose = params:get('dot_' .. i .. '_rate')
         local r = music.interval_to_ratio(transpose)
-
+        
         if x == 1 then
           softcut.rate(i + 2, r)
         else
@@ -121,7 +121,7 @@ function m_dots.build_params()
         end
 
         grid_dirty = true
-      end
+      end)
 
     -- dot pan
     params:add_control('dot_'.. i .. '_pan', 'dot ' .. i .. ' pan', 
