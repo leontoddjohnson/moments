@@ -72,8 +72,8 @@ function m_dots.build_params()
 
 
   -- dot parameters --------------------------------------------------------- --
-  params:add_group('dots', 'dots', 16)
-  for i = 1,5 do 
+  params:add_group('dots', 'dots', 4 * 5)
+  for i = 1,4 do 
     -- synchronized time between dot jumps
     params:add_number('dot_'.. i .. '_move_frac',
       'dot '.. i .. ' move fraction', 1, 8, 1, 
