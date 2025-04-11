@@ -151,11 +151,9 @@ function m_dots.build_params()
           if x == 1 then
             -- when mono, only read from left buffer
             softcut.buffer(i, 1)
-            softcut.pan(i, 0)
           else
             -- otherwise, send dots 1 and 2 to left, and 3 and 4 to right
             softcut.buffer(i, i < 5 and 1 or 2)
-            softcut.pan(i, i < 5 and -1 or 1)
           end
         end
       end
@@ -249,7 +247,6 @@ function m_dots.sc_start()
     -- init for all
     softcut.enable(i, 1)
     softcut.loop(i, 1)
-    softcut.rate(i, 1)
     softcut.fade_time(i, 0.1)
     softcut.loop_start(i, 0)
     softcut.loop_end(i, params:get('loop_length'))
@@ -267,6 +264,7 @@ function m_dots.sc_start()
         softcut.buffer(i, i)
       end
 
+      softcut.rate(i, 1)
       softcut.position(i, 0)
       softcut.rec_level(i, 1)
       softcut.pre_level(i, 0)
@@ -280,20 +278,20 @@ function m_dots.sc_start()
       if params:get('input_type') == 1 then
         -- when mono, only read from left buffer
         softcut.buffer(i, 1)
-        softcut.pan(i, 0)
       else
         -- otherwise, send dots 1 and 2 to left, and 3 and 4 to right
         softcut.buffer(i, i < 5 and 1 or 2)
-        softcut.pan(i, i < 5 and -1 or 1)
       end
 
       softcut.play(i, 0)
-      softcut.level(i, params:get('dot_' .. i - 2 .. '_level'))
       softcut.position(i, params:get('loop_length'))
       m_dots.positions[i] = params:get('loop_length')
     end
 
   end
+
+  -- send/set parameters to softcut
+  params:bang()
 
   softcut.event_phase(m_dots.update_position)
   softcut.poll_start_phase()
